@@ -6,6 +6,7 @@
 #include <pspdisplay.h>
 #include <pspge.h>
 #include <pspctrl.h>
+#include <psprtc.h>
 #include <pspaudio.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -375,7 +376,14 @@ int main(int argc, char **argv) {
     sceDisplaySetMode(0, 480, 272);
     sceCtrlSetSamplingCycle(0);
     sceCtrlSetSamplingMode(PSP_CTRL_MODE_DIGITAL);
-    srand(sceKernelGetSystemTimeLow());
+    /* Use the PSP real-time clock so a full restart gets a fresh seed.
+       The low system timer can repeat when startup timing is similar. */
+    u64 rtcTick = 0;
+    if (sceRtcGetCurrentTick(&rtcTick) >= 0) {
+        srand((unsigned int)(rtcTick ^ (rtcTick >> 32)));
+    } else {
+        srand((unsigned int)sceKernelGetSystemTimeLow());
+    }
 
     int th = sceKernelCreateThread("audio", audio_thread, 0x12, 0x10000, 0, NULL);
     if (th >= 0) sceKernelStartThread(th, 0, NULL);
