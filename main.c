@@ -367,13 +367,16 @@ int main(int argc, char **argv) {
 
     initGame();
     SceCtrlData pad;
+    /* на экране fb[0], рисуем всегда в скрытый буфер, потом меняем местами */
+    sceDisplaySetFrameBuf(fb[0], 512, PSP_DISPLAY_PIXEL_FORMAT_8888, PSP_DISPLAY_SETBUF_IMMEDIATE);
+    cur = 1;
     while (1) {
         sceCtrlPeekBufferPositive(&pad, 1);
         update(&pad);
-        draw();
-        sceDisplayWaitVblankStart();
-        sceDisplaySetFrameBuf(fb[cur], 512, PSP_DISPLAY_PIXEL_FORMAT_8888, PSP_DISPLAY_SETBUF_NEXTFRAME);
-        cur ^= 1;
+        draw();                       /* рисуем в скрытый буфер */
+        sceDisplayWaitVblankStart();  /* ждём кадровый синхроимпульс */
+        sceDisplaySetFrameBuf(fb[cur], 512, PSP_DISPLAY_PIXEL_FORMAT_8888, PSP_DISPLAY_SETBUF_IMMEDIATE);
+        cur ^= 1;                     /* следующий кадр рисуем в другой буфер */
     }
     return 0;
 }
