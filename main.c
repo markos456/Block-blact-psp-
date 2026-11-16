@@ -406,8 +406,10 @@ int main(int argc, char **argv) {
         /* На настоящей PSP сбрасываем кэш CPU для нарисованного VRAM-буфера.
            Без этого дисплей может показывать старое содержимое/чёрный экран. */
         sceKernelDcacheWritebackRange(fb[cur], 512 * 272 * sizeof(u32));
-        sceDisplayWaitVblankStart();
+        /* Запрашиваем переключение ДО ожидания VBlank, чтобы не рисовать
+           в буфер, который дисплей ещё может показывать. */
         sceDisplaySetFrameBuf(fb[cur], 512, PSP_DISPLAY_PIXEL_FORMAT_8888, PSP_DISPLAY_SETBUF_NEXTFRAME);
+        sceDisplayWaitVblankStart();
         cur ^= 1;                     /* следующий кадр рисуем в другой буфер */
     }
     return 0;
