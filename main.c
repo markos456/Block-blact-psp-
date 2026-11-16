@@ -148,7 +148,7 @@ static const char *SH[] = {
 static int g[N][N];
 static Piece pc[3];
 static int sel, kr, kc, score, best, over, flashT, flashLines, msgT;
-static char kill[N][N];
+static char killm[N][N];
 static char msg[32];
 static char bestPath[256];
 
@@ -225,12 +225,12 @@ static void place(int i) {
     p->ok = 0;
     sfx(S_PLACE, 0);
     int lines = 0;
-    memset(kill, 0, sizeof kill);
+    memset(killm, 0, sizeof killm);
     for (int k = 0; k < N; k++) {
         int rf = 1, cf = 1;
         for (int j = 0; j < N; j++) { if (!g[k][j]) rf = 0; if (!g[j][k]) cf = 0; }
-        if (rf) { for (int j = 0; j < N; j++) kill[k][j] = 1; lines++; }
-        if (cf) { for (int j = 0; j < N; j++) kill[j][k] = 1; lines++; }
+        if (rf) { for (int j = 0; j < N; j++) killm[k][j] = 1; lines++; }
+        if (cf) { for (int j = 0; j < N; j++) killm[j][k] = 1; lines++; }
     }
     if (lines) { flashT = 14; flashLines = lines; sfx(S_CLEAR, lines); }
     else after();
@@ -260,7 +260,7 @@ static void update(const SceCtrlData *pad) {
     if (flashT > 0) {
         if (--flashT == 0) {
             for (int r = 0; r < N; r++)
-                for (int c = 0; c < N; c++) if (kill[r][c]) g[r][c] = 0;
+                for (int c = 0; c < N; c++) if (killm[r][c]) g[r][c] = 0;
             int pts = flashLines * flashLines * 10;
             score += pts;
             if (flashLines > 1) snprintf(msg, sizeof msg, "COMBO x%d +%d", flashLines, pts);
@@ -300,7 +300,7 @@ static void draw(void) {
     for (int r = 0; r < N; r++)
         for (int c = 0; c < N; c++) {
             u32 col = g[r][c] ? PAL[g[r][c]] : C_EMPTY;
-            if (flashT > 0 && kill[r][c] && ((flashT / 2) & 1)) col = C_WHITE;
+            if (flashT > 0 && killm[r][c] && ((flashT / 2) & 1)) col = C_WHITE;
             rect(BX + c * CS + 1, BY + r * CS + 1, CS - 2, CS - 2, col);
         }
     if (!over && flashT == 0 && pc[sel].ok) {
