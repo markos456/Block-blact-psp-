@@ -354,9 +354,11 @@ int main(int argc, char **argv) {
     strcat(bestPath, "best.dat");
     loadBest();
 
-    u32 base = 0x40000000 | (u32)sceGeEdramGetAddr();
-    fb[0] = (u32 *)base;
-    fb[1] = (u32 *)(base + 512 * 272 * 4);
+    /* --- ПРАВИЛЬНАЯ настройка фреймбуфера --- */
+    u32 vram = (u32)sceGeEdramGetAddr();
+    fb[0] = (u32 *)vram;
+    fb[1] = (u32 *)(vram + 512 * 272 * 4);
+
     sceDisplaySetMode(0, 480, 272);
     sceCtrlSetSamplingCycle(0);
     sceCtrlSetSamplingMode(PSP_CTRL_MODE_DIGITAL);
@@ -367,9 +369,15 @@ int main(int argc, char **argv) {
 
     initGame();
     SceCtrlData pad;
-    /* на экране fb[0], рисуем всегда в скрытый буфер, потом меняем местами */
+
+    /* Очищаем оба буфера, чтобы не показывать мусор */
+    memset(fb[0], 0, 512 * 272 * 4);
+    memset(fb[1], 0, 512 * 272 * 4);
+
+    /* Показываем fb[0], рисуем в fb[1] */
     sceDisplaySetFrameBuf(fb[0], 512, PSP_DISPLAY_PIXEL_FORMAT_8888, PSP_DISPLAY_SETBUF_IMMEDIATE);
     cur = 1;
+
     while (1) {
         sceCtrlPeekBufferPositive(&pad, 1);
         update(&pad);
