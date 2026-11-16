@@ -147,6 +147,8 @@ static const char *SH[] = {
 
 static int g[N][N];
 static Piece pc[3];
+/* Remember the last two shapes so the tray does not repeat them immediately. */
+static int recentShapes[2] = {-1, -1};
 static int sel, kr, kc, score, best, over, flashT, flashLines, msgT;
 static char killm[N][N];
 static char msg[32];
@@ -155,7 +157,18 @@ static char bestPath[256];
 static Piece newPiece(void) {
     Piece p;
     memset(&p, 0, sizeof p);
-    const char *s = SH[rand() % NSH];
+
+    /* Pick a random shape, avoiding the two most recently generated shapes. */
+    int shape = rand() % NSH;
+    int tries = 0;
+    while ((shape == recentShapes[0] || shape == recentShapes[1]) && tries < 32) {
+        shape = rand() % NSH;
+        tries++;
+    }
+    recentShapes[1] = recentShapes[0];
+    recentShapes[0] = shape;
+
+    const char *s = SH[shape];
     int r = 0, c = 0;
     for (; *s; s++) {
         if (*s == '/') { r++; c = 0; continue; }
